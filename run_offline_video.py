@@ -89,13 +89,10 @@ od = Det2(
     gpu_device='cpu',
     )
 print("----------OD started----------")
-
-## adjust max_age to suit the fps
-max_age = int(vid_info['fps'] * 7) # 7 seconds
-
+nn_budget = int (vid_info['fps'] * 10) # 10 secs in the past
 # assuming 7fps & 70nn_budget, tracker looks into 10secs in the past.
 tracker = Tracker(
-    max_age=max_age, nn_budget=700, override_track_class=None, clock=clock
+    max_age=30, nn_budget=nn_budget, override_track_class=None, clock=clock
 )
 print("----------Tracker started----------")
 
