@@ -28,9 +28,7 @@ import jetson.utils
 import argparse
 import sys
 
-
-from deep_sort_realtime.deepsort_tracker_emb import DeepSort as Tracker
-from utils.drawer import Drawer
+from norfair import Detection, Tracker, draw_tracked_objects
 
 f = open('coco.txt','r')
 labels = f.read()
@@ -61,21 +59,19 @@ net = jetson.inference.detectNet(opt.network, sys.argv, opt.threshold)
 
 # create video sources & outputs
 input = jetson.utils.videoSource(opt.input_URI, argv=sys.argv)
-output = jetson.utils.videoOutput(opt.output_URI, argv=sys.argv+is_headless)
+# output = jetson.utils.videoOutput(opt.output_URI, argv=sys.argv+is_headless)
 
-# assuming 7fps & 70nn_budget, tracker looks into 10secs in the past.
-nn_budget = 70
-tracker = Tracker(
-	max_age=30, nn_budget=nn_budget, override_track_class=None)
-drawer = Drawer()
+def ceintroid_distance(detection, tracked_object):
+    return np.linalg.norm(detection.points - tracked_object.estimate)
+tracker = Tracker(distance_function=ceintroid_distance, distance_threshold=20)
+
+
 # process frames until the user exits
 while True:
 	# capture the next image
 	img = input.Capture()
 	np_source = jetson.utils.cudaToNumpy(img)
 	np_source = cv2.cvtColor(np_source, cv2.COLOR_RGBA2BGR)
-	# detect objects in the image (with overlay)
-	#detections = net.Detect(img, overlay=opt.overlay)
 	detections = net.Detect(img, overlay='none')
 	chosen_track = None
 
@@ -83,35 +79,24 @@ while True:
 	print("detected {:d} objects in image".format(len(detections)))
 	raw_dets = []
 	for detection in detections:
-		bbox = [detection.Left, detection.Top, detection.Width, detection.Height]
-		class_name = label_arr[detection.ClassID]
-		raw_dets.append((bbox, detection.Confidence, class_name))
-		print(detection)
-
-	tracks = tracker.update_tracks(np_source, raw_dets)
+		center_x = detection.Left + detection.Width/2
+		center_y = detection.Top + detection.Height/2
+		raw_dets.append((center_x, center_y))
+  
+	norfair_dets = [Detection(center_point) for center_point in raw_dets]
+	tracks = tracker.update(detections=norfair_dets)
 
 	show_frame = np_source.copy()
-	if raw_dets: 	
-		drawer.draw_tracks(
-			show_frame,
-			tracks,
-			chosen_track=chosen_track
-		)
-	#show_frame = cv2.cvtColor(show_frame, cv2.COLOR_BGR2RGBA)
-	#display_img = jetson.utils.cudaFromNumpy(show_frame)
+	draw_tracked_objects(show_frame, tracks)
+	
 	cv2.imshow("webcam", show_frame)
 	k = cv2.waitKey(30)
 	if k == ord('q'):
 		break
-	# render the image
-	#output.Render(display_img)
-
-	# update the title bar
-	#output.SetStatus("{:s} | Network {:.0f} FPS".format(opt.network, net.GetNetworkFPS()))
 
 	# print out performance info
 	net.PrintProfilerTimes()
 
 	# exit on input/output EOS
-	if not input.IsStreaming() or not output.IsStreaming():
+	if not input.IsStreaming():
 		break

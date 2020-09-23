@@ -86,5 +86,8 @@ RUN cd /detectron2 &&\
     python3 -m pip install -e .
 # RUN rm -r detectron2
 
+# RUN NORFAIR
+RUN pip3 install --no-cache-dir norfair
+
 ENV TZ=Asia/Singapore
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
