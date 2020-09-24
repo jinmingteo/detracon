@@ -27,7 +27,7 @@ import jetson.utils
 
 import argparse
 import sys
-
+import time
 
 from deep_sort_realtime.deepsort_tracker_emb import DeepSort as Tracker
 from utils.drawer import Drawer
@@ -70,6 +70,7 @@ tracker = Tracker(
 drawer = Drawer()
 # process frames until the user exits
 while True:
+	tic = time.time()
 	# capture the next image
 	img = input.Capture()
 	np_source = jetson.utils.cudaToNumpy(img)
@@ -99,8 +100,11 @@ while True:
 		)
 	#show_frame = cv2.cvtColor(show_frame, cv2.COLOR_BGR2RGBA)
 	#display_img = jetson.utils.cudaFromNumpy(show_frame)
+	toc = time.time()
+	fps = 1/(toc-tic)
+	cv2.putText(show_frame, f'fps: {fps:.3f}', (200,25),cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
 	cv2.imshow("webcam", show_frame)
-	k = cv2.waitKey(30)
+	k = cv2.waitKey(16)
 	if k == ord('q'):
 		break
 	# render the image

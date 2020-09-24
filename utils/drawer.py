@@ -69,6 +69,7 @@ class Drawer(object):
         l,t,r,b = [int(x) for x in track.to_tlbr()]
         
         text = 'Trk {}, Class {}'.format(track.track_id.split('_')[1], track.det_class)
+        text2 = f'{(l+r)/2}'
 
         main_text_size, text_baseline = cv2.getTextSize(text, self.font, fontScale, fontThickness)
         main_text_w, main_text_h = main_text_size
@@ -77,6 +78,11 @@ class Drawer(object):
                     text, 
                     # (l+5, b-10),
                     (l+5, b - buffer),
+                    self.font, fontScale, color, fontThickness)
+        cv2.putText(frameDC, 
+                    text2, 
+                    # (l+5, b-10),
+                    (l+5, b - buffer - 100),
                     self.font, fontScale, color, fontThickness)
 
         cv2.rectangle(frameDC, (l, t), (r, b), color, fontThickness)

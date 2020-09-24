@@ -33,6 +33,9 @@ video_name = env.get('VIDEO_NAME','cam')
 is_webcam = bool(int(env.get('VIDEO_IS_USB_WEBCAM',1)))
 if is_webcam:
     video_path = int(video_path)
+
+#video_path ="udp://127.0.0.1:10000"
+
 flip = bool(int(env.get('VIDEO_FLIP',0)))
 if flip:
     print('VIDEO WILL FLIP')
@@ -171,6 +174,7 @@ while True:
         #     )        
         
         if display or out_vid:
+        	# drawer.draw_bbs(show_frame, bbs)
             drawer.draw_tracks(
                 show_frame,
                 tracks,
