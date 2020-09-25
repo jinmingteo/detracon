@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import copy
+import math
 # import seaborn as sns
 
 class Drawer(object):
@@ -68,8 +69,12 @@ class Drawer(object):
 
         l,t,r,b = [int(x) for x in track.to_tlbr()]
         
-        text = 'Trk {}, Class {}'.format(track.track_id.split('_')[1], track.det_class)
-        text2 = f'{(l+r)/2}'
+        # text = 'Trk {}, Class {}'.format(track.track_id.split('_')[1], track.det_class)
+        text = 'Trk {}'.format(track.track_id.split('_')[1])
+        middle = (l+r)/2 - 320
+        heading = math.degrees(math.atan(middle/633))
+
+        text2 = f"{heading:.2f}deg"
 
         main_text_size, text_baseline = cv2.getTextSize(text, self.font, fontScale, fontThickness)
         main_text_w, main_text_h = main_text_size
@@ -82,8 +87,8 @@ class Drawer(object):
         cv2.putText(frameDC, 
                     text2, 
                     # (l+5, b-10),
-                    (l+5, b - buffer - 100),
-                    self.font, fontScale, color, fontThickness)
+                    (l+5, b - buffer - 50),
+                    self.font, fontScale, (0,0,255), fontThickness)
 
         cv2.rectangle(frameDC, (l, t), (r, b), color, fontThickness)
 
